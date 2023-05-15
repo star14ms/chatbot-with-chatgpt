@@ -52,7 +52,7 @@ const ChatBot: React.FC<Props> = ({
   const messageDataRedux = useSelector(selectBotMessageData);
 
   const MessageUnrelated = '저는 당신의 영어 실력을 향상시키기 위해 도와주는 글라이디입니다! 당신의 학습에 도움이 되는 질문이라면 모두 답변해 드릴 수 있으니, 문제와 관련된 질문을 작성해주세요 😊';
-  let messageSound: HTMLAudioElement | null
+  const [messageSound, setMessageSound] = useState(null);
 
   const botOptions = {
     botTitle: 'Glide',
@@ -83,14 +83,15 @@ const ChatBot: React.FC<Props> = ({
   // Message Sound Loading
   useEffect(() => {
     if (botOptions.messageSoundOption.src) {
-      messageSound = new Audio(botOptions.messageSoundOption.src)
-      messageSound.volume = botOptions.messageSoundOption.volume
+      const _messageSound = new Audio(botOptions.messageSoundOption.src)
+      _messageSound.volume = botOptions.messageSoundOption.volume
+      setMessageSound(_messageSound)
     }
     
     return () => {
       if (messageSound) {
         messageSound.pause()
-        messageSound = null
+        setMessageSound(null)
       }
     }
   }, [])
@@ -212,6 +213,7 @@ const ChatBot: React.FC<Props> = ({
           urlText: '강의 바로가기'
         })
         setBotTyping(false);
+        messageSound?.play();
       }, (error) => {
         
         updateMessageData({
@@ -219,8 +221,8 @@ const ChatBot: React.FC<Props> = ({
           type: 'text',
           text: String(error)
         })
-        console.log(error)
         setBotTyping(false);
+        messageSound?.play();
       })
     } else {
       updateMessageData({
@@ -229,6 +231,7 @@ const ChatBot: React.FC<Props> = ({
         text: '링크가 아닙니다.'
       })
       setBotTyping(false);
+      messageSound?.play();
     }
 
     return
