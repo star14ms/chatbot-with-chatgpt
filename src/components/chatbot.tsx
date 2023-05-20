@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Image from 'next/image';
 // import ReactChatBot, { MessageData, MessageDataOption } from 'react-chat-bot';
 import ReactChatBot, { MessageData, MessageDataOption } from 'react-chat-bot/src/react-chat-bot';
+import { Message } from '@/shared/types/chatbot';
 import { useSession } from 'next-auth/react';
 import { useAxios } from '@/lib/api'
 
@@ -200,41 +201,41 @@ const ChatBot: React.FC<Props> = ({
     // Loading
     setBotTyping(true);
 
-    let urls = []
-    if (text.includes('https://')) {
-      urls = [text]
+    // let urls = []
+    // if (text.includes('https://')) {
+    //   urls = [text]
 
-      getMetadataAll(urls).then((metaDataList) => {
+    //   getMetadataAll(urls).then((metaDataList) => {
         
-        updateMessageData({
-          agent: 'bot',
-          type: 'url',
-          metaDataList,
-          urlText: '강의 바로가기'
-        })
-        setBotTyping(false);
-        messageSound?.play();
-      }, (error) => {
+    //     updateMessageData({
+    //       agent: 'bot',
+    //       type: 'url',
+    //       metaDataList,
+    //       urlText: '강의 바로가기'
+    //     })
+    //     setBotTyping(false);
+    //     messageSound?.play();
+    //   }, (error) => {
         
-        updateMessageData({
-          agent: 'bot',
-          type: 'text',
-          text: String(error)
-        })
-        setBotTyping(false);
-        messageSound?.play();
-      })
-    } else {
-      updateMessageData({
-        agent: 'bot',
-        type: 'text',
-        text: '링크가 아닙니다.'
-      })
-      setBotTyping(false);
-      messageSound?.play();
-    }
+    //     updateMessageData({
+    //       agent: 'bot',
+    //       type: 'text',
+    //       text: String(error)
+    //     })
+    //     setBotTyping(false);
+    //     messageSound?.play();
+    //   })
+    // } else {
+    //   updateMessageData({
+    //     agent: 'bot',
+    //     type: 'text',
+    //     text: '링크가 아닙니다.'
+    //   })
+    //   setBotTyping(false);
+    //   messageSound?.play();
+    // }
 
-    return
+    // return
   
     axios.post('/chat', { questionId: questionId, text: text }, {
       headers: {
@@ -274,10 +275,10 @@ const ChatBot: React.FC<Props> = ({
     return metadata;
   }
 
-  const buildReplyMessage = (data) => {
+  const buildReplyMessage = (data: Message) => {
     let hintDenied = null;
     const scenarioStart = scenario[0][0]
-    if (data.response?.includes('I can only provide 3 hints')) {
+    if (data.text?.includes('I can only provide 3 hints')) {
       hintDenied = true;
     } else {
       hintDenied = false;
@@ -290,13 +291,20 @@ const ChatBot: React.FC<Props> = ({
       sourceButtonMini.text = 'Source for this passage';
     }
 
+    const options = data.actions.map((action) => {
+      if (action.type === 'reply') {
+        return { action: 'postback', text: action.text, value: action.payload } 
+      } else if (action.type === 'link') {
+        return { action: 'url', text: action.text, value: action.uri } 
+      }
+    });
+
     const replyMessage = {
       type: 'button',
       agent: 'bot',
-      text: data.intend !== 'unrelated' ? 
-        data.response.replaceAll(String.fromCharCode(10), "<br>") : MessageUnrelated,
+      text: data.text.replaceAll(String.fromCharCode(10), "<br>"),
       reselectable: true,
-      options: []
+      options: options
     };
 
     return replyMessage;
