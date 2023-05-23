@@ -147,7 +147,11 @@ const ChatBot: React.FC<Props> = ({
           }
           setScenarioIndex((prevIndex) => prevIndex + 1);
         }
-      }, (i + 1) * 1500);
+      }, (i + 1) * (
+        i===0 ? 1500 : 
+        scenario[_scenarioIndex][i].type==='text' ? scenario[_scenarioIndex][i].text.length * 20 + 1000 : 
+        2500)
+      );
     }
   };
 
